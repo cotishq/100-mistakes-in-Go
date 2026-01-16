@@ -11,16 +11,18 @@ func main() {
 	var client *http.Client // outer client
 
 	if tracing {
-		client, err := createClientWithTracing() //  shadowing happens here
+		c, err := createClientWithTracing() //  shadowing happens here
 		if err != nil {
 			log.Fatal(err)
 		}
+		client = c
 		log.Println("inside if client:", client)
 	} else {
-		client, err := createDefaultClient() //  shadowing happens here
+		c, err := createDefaultClient() //  shadowing happens here
 		if err != nil {
 			log.Fatal(err)
 		}
+		client = c
 		log.Println("inside else client:", client)
 	}
 
