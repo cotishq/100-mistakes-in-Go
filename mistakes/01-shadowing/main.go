@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -8,26 +9,55 @@ import (
 func main() {
 	tracing := true
 
-	var client *http.Client // outer client
+	fmt.Println("========== BUGGY VERSION ==========")
+	buggy(tracing)
+
+	fmt.Println("\n========== FIXED VERSION ==========")
+	fixed(tracing)
+}
+
+//  Bug: unintended variable shadowing using :=
+func buggy(tracing bool) {
+	var client *http.Client
 
 	if tracing {
-		c, err := createClientWithTracing() //  shadowing happens here
+		client, err := createClientWithTracing() //  shadows outer client
 		if err != nil {
-			log.Fatal(err)
+			log.Println("error:", err)
+			return
 		}
-		client = c
-		log.Println("inside if client:", client)
+		log.Println("inside if:", client)
 	} else {
-		c, err := createDefaultClient() //  shadowing happens here
+		client, err := createDefaultClient() //  shadows outer client
 		if err != nil {
-			log.Fatal(err)
+			log.Println("error:", err)
+			return
 		}
-		client = c
-		log.Println("inside else client:", client)
+		log.Println("inside else:", client)
 	}
 
-	// This prints nil because outer client never got assigned
-	log.Println("outside client:", client)
+	//  Outer client never got assigned -> nil
+	log.Println("outside:", client)
+}
+
+//  Fix: declare err once + use "=" assignment (no shadowing)
+func fixed(tracing bool) {
+	var client *http.Client
+	var err error
+
+	if tracing {
+		client, err = createClientWithTracing() //  no :=
+	} else {
+		client, err = createDefaultClient()
+	}
+
+	if err != nil {
+		log.Println("common error handling:", err)
+		return
+	}
+
+	//  Outer client is assigned properly
+	log.Println("outside:", client)
 }
 
 func createClientWithTracing() (*http.Client, error) {
